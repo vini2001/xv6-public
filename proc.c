@@ -267,10 +267,17 @@ exit(void)
   panic("zombie exit");
 }
 
+int wait(void)
+{
+  int t;
+  return wait_t(&t);
+}
+
 // Wait for a child process to exit and return its pid.
 // Return -1 if this process has no children.
+// pointer time receives the ellapsed time in ticks
 int
-wait(void)
+wait_t(int *time)
 {
   struct proc *p;
   int havekids, pid;
@@ -285,6 +292,7 @@ wait(void)
         continue;
       havekids = 1;
       if(p->state == ZOMBIE){
+        (*time) = p->systime;
         // Found one.
         pid = p->pid;
         kfree(p->kstack);
@@ -295,6 +303,7 @@ wait(void)
         p->name[0] = 0;
         p->killed = 0;
         p->state = UNUSED;
+        p->systime = 0;
         release(&ptable.lock);
         return pid;
       }

@@ -171,6 +171,8 @@ mkfs: mkfs.c fs.h
 UPROGS=\
 	_cat\
 	_date\
+	_time\
+	_heavyjob\
 	_echo\
 	_forktest\
 	_grep\
@@ -184,7 +186,7 @@ UPROGS=\
 	_stressfs\
 	_wc\
 	_zombie\
-	# _usertests\
+	_usertests\
 
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)

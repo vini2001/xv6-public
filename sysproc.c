@@ -26,6 +26,20 @@ sys_wait(void)
   return wait();
 }
 
+// wait_t does the same as wait, but it returns the ellapsed time in ticks
+int
+sys_wait_t(void)
+{
+  int time;
+  int r = wait_t(&time);
+
+  char *ptr;
+  argptr(0, &ptr, sizeof(int*));
+  *(int*)ptr = time;
+
+  return r;
+}
+
 int
 sys_kill(void)
 {
@@ -91,6 +105,7 @@ sys_uptime(void)
 }
 
 
+// print the current date
 int
 sys_date(void)
 {

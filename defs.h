@@ -118,6 +118,7 @@ void            setproc(struct proc*);
 void            sleep(void*, struct spinlock*);
 void            userinit(void);
 int             wait(void);
+int             wait_t(int*);
 void            wakeup(void*);
 void            yield(void);
 
@@ -156,8 +157,6 @@ int             fetchint(uint, int*);
 int             fetchstr(uint, char**);
 void            syscall(void);
 
-// timer.c
-void            timerinit(void);
 
 // trap.c
 void            idtinit(void);
