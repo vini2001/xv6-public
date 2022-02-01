@@ -65,6 +65,25 @@ myproc(void) {
   return p;
 }
 
+int getPrioritySum(){
+  int prioritySum = 0;
+  struct proc *p = ptable.proc;
+  while(p < &ptable.proc[NPROC]){
+    prioritySum += p->priority;
+    p++;
+  }
+  return prioritySum;
+}
+
+void resetExecutionTime(){
+  struct proc *p = ptable.proc;
+  int prioritySum = getPrioritySum();
+  while(p < &ptable.proc[NPROC]){
+    p->executionTime = (p->priority/prioritySum)*10;
+    p++;
+  }
+}
+
 //PAGEBREAK: 32
 // Look in the process table for an UNUSED proc.
 // If found, change state to EMBRYO and initialize
@@ -88,7 +107,8 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
-  p->priority = 10;  //Default Priority of a process is set to be 10
+  p->priority = 1;  //Default Priority of a process is set to be 10
+  resetExecutionTime();
 
   release(&ptable.lock);
 
@@ -264,6 +284,9 @@ exit(void)
 
   // Jump into the scheduler, never to return.
   curproc->state = ZOMBIE;
+  curproc->priority = 0;
+  curproc->executionTime = 0;
+  resetExecutionTime();
   sched();
   panic("zombie exit");
 }
@@ -349,6 +372,18 @@ scheduler(void)
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
+      struct proc *highPriority = p;
+      struct proc *pAux = ptable.proc;
+      while(pAux < &ptable.proc[NPROC]){
+        if(pAux->state != RUNNABLE){
+          continue;
+        }
+        if(pAux->priority > highPriority->priority){
+          highPriority = pAux; // pegando aquele que tem a maior prioridade.
+        }
+        pAux++;
+      }
+      p = highPriority;
       c->proc = p;
       switchuvm(p);
       p->state = RUNNING;
