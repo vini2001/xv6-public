@@ -184,7 +184,6 @@ UPROGS=\
 	_sh\
 	_stressfs\
 	_hjb\
-	_sch_t\
 	_wc\
 	_zombie\
 	_usertests\

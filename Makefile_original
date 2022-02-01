@@ -170,7 +170,6 @@ UPROGS=\
 	_date\
 	_time\
 	_hjb\
-	_sch_t\
 	_echo\
 	_forktest\
 	_grep\

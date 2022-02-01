@@ -133,7 +133,7 @@ static int (*syscalls[])(void) = {
 [SYS_date]          sys_date,
 [SYS_wait_t]        sys_wait_t,
 [SYS_print_current_rproc]           sys_print_current_rproc,
-[SYS_change_priority]          sys_change_priority
+[SYS_change_priority]          sys_change_priority,
 };
 
 void
