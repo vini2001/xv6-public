@@ -69,7 +69,7 @@ int getPrioritySum(){
   int prioritySum = 0;
   struct proc *p = ptable.proc;
   while(p < &ptable.proc[NPROC]){
-    if((p->state == RUNNING || p->state == RUNNABLE) && strncmp( p->name, "ps", 2 ) == 0 ) {
+    if((p->state == RUNNING || p->state == RUNNABLE) && strncmp( p->name, "ps", 2 ) != 0 ) {
       prioritySum += p->priority;
     }
     p++;
@@ -112,6 +112,8 @@ found:
   p->priority = 1;  //Default Priority of a process is set to be 1
 
   p->startTime = ticks;
+  p->runcount_t = 0;
+  p->runcount = 0;
   resetExecutionTime();
 
   release(&ptable.lock);
@@ -291,6 +293,7 @@ exit(void)
   curproc->priority = 0;
   curproc->expExecutionTime = 0;
   curproc->runcount = 0;
+  curproc->runcount_t = 0;
   resetExecutionTime();
   sched();
   panic("zombie exit");
@@ -370,41 +373,37 @@ scheduler(void)
 
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->state != RUNNABLE)
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; ){
+      if(p->state != RUNNABLE) {
+        p++;
         continue;
+      }
 
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
-      struct proc *highPriority = p;
-      struct proc *pAux = ptable.proc;
 
-      float prioritySum = (float)getPrioritySum();
-      for(pAux = ptable.proc; pAux < &ptable.proc[NPROC]; pAux++){
-        if(pAux->state != RUNNABLE){
-          continue;
-        }
-
-        // não consegui testar isso direito ainda. A ideia é que se um processo tiver prioridade 3 e prioritySum é 10, o processo vai rodar 30 ciclos deste loop e depois passar pro próximo processo.
-        if(pAux->runcount > ((float)pAux->priority*100) / prioritySum){
-          pAux->runcount = 0;
-          continue;
-        }
-
-        highPriority = pAux; // pegando aquele que tem a maior prioridade.
-        break;
+      float prioritySum = (float) getPrioritySum(); 
+      if(prioritySum == 0) prioritySum = 1;
+      int shares = (float)((float)(p->priority*10.0) / prioritySum);
+      shares *= 10;
+      if(shares < 1.0) shares = 1.0;
+      // if(ticks%100 < 2) {
+      //   cprintf("pid: %d, shares %d/%d, prioritysum %d \n", p->pid, p->runcount, shares, prioritySum);
+      // }
+      p->runcount_t++;
+      if(p->runcount >= (int)shares){
+        p->runcount = 0;
+        p++; // only goes to next process if it this one has run enough times
+        continue;
+      }else{
+        p->runcount ++;
       }
-      p = highPriority;
+
       c->proc = p;
-
-      // cprintf("scheduler: running %s\n", p->name);
-
-      // uint ticksStart = ticks;
 
       switchuvm(p);
       p->state = RUNNING;
-      // cprintf("running %s\n", p->name);
 
 
       swtch(&(c->scheduler), p->context);
@@ -607,7 +606,7 @@ print_current_rproc()
   acquire(&ptable.lock);
   // pegando soma das prioridades:
   int prioritySum = getPrioritySum();
-  cprintf("name \t pid \t state \t priority \t expected execution time \t started\n");
+  cprintf("name \t pid \t state \t priority \t expected execution time \t started \t runcount\n");
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     p->expExecutionTime = p->state == RUNNING || p->state == RUNNABLE 
       ? (((float)p->priority)/((float)prioritySum))*10 
@@ -618,15 +617,16 @@ print_current_rproc()
     }
 
     int seconds = (ticks - p->startTime)*10;
+    int runtotal = p->runcount_t;
 
     if(p->state == SLEEPING){
-      cprintf("%s \t %d \t SLEEPING \t %d \t %ds \t\t\t\t %d ms ago \n ", p->name, p->pid, p->priority, p->expExecutionTime, seconds);
+      cprintf("%s \t %d \t SLEEPING \t %d \t %ds \t\t\t\t %d ms ago \t %d\n ", p->name, p->pid, p->priority, p->expExecutionTime, seconds, runtotal);
     }
     else if(p->state == RUNNING){
-      cprintf("%s \t %d \t RUNNING \t %d \t %ds \t\t\t\t %d ms ago \n ", p->name, p->pid, p->priority, p->expExecutionTime, seconds);
+      cprintf("%s \t %d \t RUNNING \t %d \t %ds \t\t\t\t %d ms ago \t %d \n ", p->name, p->pid, p->priority, p->expExecutionTime, seconds, runtotal);
     }
     else if(p->state == RUNNABLE){
-      cprintf("%s \t %d \t RUNNABLE \t %d \t %ds \t\t\t\t %d ms ago \n ", p->name, p->pid, p->priority, p->expExecutionTime, seconds);
+      cprintf("%s \t %d \t RUNNABLE \t %d \t %ds \t\t\t\t %d ms ago \t %d \n ", p->name, p->pid, p->priority, p->expExecutionTime, seconds, runtotal);
     }
   }
   release(&ptable.lock);
@@ -640,6 +640,7 @@ change_priority(int pid, int priority)
   acquire(&ptable.lock);
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->pid == pid){
+      cprintf("Priority successfully changed\n");
       p->priority = priority;
       break;
     }

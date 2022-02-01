@@ -45,7 +45,8 @@ struct proc {
   int executionTime;
   int expExecutionTime;
   uint startTime;
-  long runcount;
+  int runcount;
+  int runcount_t;
   struct proc *parent;         // Parent process
   struct trapframe *tf;        // Trap frame for current syscall
   struct context *context;     // swtch() here to run process
