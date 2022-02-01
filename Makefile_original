@@ -169,7 +169,8 @@ UPROGS=\
 	_cat\
 	_date\
 	_time\
-	_heavyjob\
+	_hjb\
+	_sch_t\
 	_echo\
 	_forktest\
 	_grep\

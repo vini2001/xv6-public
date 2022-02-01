@@ -183,7 +183,8 @@ UPROGS=\
 	_rm\
 	_sh\
 	_stressfs\
-	_heavyjob\
+	_hjb\
+	_sch_t\
 	_wc\
 	_zombie\
 	_usertests\

@@ -43,6 +43,9 @@ struct proc {
   int pid;                     // Process ID
   int priority;
   int executionTime;
+  int expExecutionTime;
+  uint startTime;
+  long runcount;
   struct proc *parent;         // Parent process
   struct trapframe *tf;        // Trap frame for current syscall
   struct context *context;     // swtch() here to run process

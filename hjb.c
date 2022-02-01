@@ -35,7 +35,7 @@ int
 main(int argc, char *argv[])
 {
     if(argc < 3){
-        printf(stderr, "Usage: heavyjob user_weight sys_weight\n");
+        printf(stderr, "Usage: hjb user_weight sys_weight\n");
         exit();
     }
 
