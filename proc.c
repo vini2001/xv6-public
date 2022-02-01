@@ -374,14 +374,13 @@ scheduler(void)
       // before jumping back to us.
       struct proc *highPriority = p;
       struct proc *pAux = ptable.proc;
-      while(pAux < &ptable.proc[NPROC]){
+      for(pAux = ptable.proc; pAux < &ptable.proc[NPROC]; pAux++){
         if(pAux->state != RUNNABLE){
           continue;
         }
         if(pAux->priority > highPriority->priority){
           highPriority = pAux; // pegando aquele que tem a maior prioridade.
         }
-        pAux++;
       }
       p = highPriority;
       c->proc = p;
