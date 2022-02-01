@@ -114,3 +114,21 @@ sys_date(void)
   cmostime((struct rtcdate*)ptr);
   return 0;
 }
+
+int
+sys_print_current_rproc(void)
+{
+  return print_current_rproc();
+}
+
+int
+sys_change_priority(void)
+{
+  int pid, pr;
+  if(argint(0, &pid) < 0)
+    return -1;
+  if(argint(1, &pr) < 0)
+    return -1;
+
+  return change_priority(pid, pr);
+}
