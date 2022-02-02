@@ -41,12 +41,15 @@ struct proc {
   char *kstack;                // Bottom of kernel stack for this process
   enum procstate state;        // Process state
   int pid;                     // Process ID
+
   int priority;
   int executionTime;
   float expExecutionTime;
   uint startTime;
   int runcount;
   int runcount_t;
+  float leftShares;
+
   struct proc *parent;         // Parent process
   struct trapframe *tf;        // Trap frame for current syscall
   struct context *context;     // swtch() here to run process

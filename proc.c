@@ -114,6 +114,7 @@ found:
   p->startTime = ticks;
   p->runcount_t = 0;
   p->runcount = 0;
+  p->leftShares = 0.0;
   resetExecutionTime();
 
   release(&ptable.lock);
@@ -387,14 +388,13 @@ scheduler(void)
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
 
-      int shares = (float)(((float)(p->priority)*10.0) / prioritySum);
-      if(shares < 1.0) shares = 1.0;
-      // if(ticks%100 < 2) {
-      //   cprintf("pid: %d, shares %d/%d, prioritysum %d \n", p->pid, p->runcount, shares, prioritySum);
-      // }
+      float realShares = (float)(((float)(p->priority)*10.0) / prioritySum) + p->leftShares;
+      int shares = realShares < 1.0 && realShares > 0.0 ? 1.0 : (int)realShares;
+
       p->runcount_t++;
-      if(p->runcount >= (int)shares){
+      if(p->runcount >= shares){
         p->runcount = 0;
+        p->leftShares = realShares - shares; // if realShares is a decimal, shares will be either bigger of smaller, so we need to store the difference to balance the next scheduling
         p++; // only goes to next process if it this one has run enough times
         continue;
       }else{
