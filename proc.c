@@ -81,7 +81,7 @@ void resetExecutionTime(){
   struct proc *p = ptable.proc;
   int prioritySum = getPrioritySum();
   while(p < &ptable.proc[NPROC]){
-    p->expExecutionTime = prioritySum == 0 ? 0 : (p->priority/prioritySum)*10;
+    p->expExecutionTime = prioritySum == 0 ? 0 : ((float)p->priority/(float)prioritySum)*10.0;
     p++;
   }
 }
@@ -373,6 +373,10 @@ scheduler(void)
 
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
+
+    float prioritySum = (float) getPrioritySum(); 
+    if(prioritySum == 0) prioritySum = 1.0;
+
     for(p = ptable.proc; p < &ptable.proc[NPROC]; ){
       if(p->state != RUNNABLE) {
         p++;
@@ -383,10 +387,7 @@ scheduler(void)
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
 
-      float prioritySum = (float) getPrioritySum(); 
-      if(prioritySum == 0) prioritySum = 1;
-      int shares = (float)((float)(p->priority*10.0) / prioritySum);
-      shares *= 10;
+      int shares = (float)(((float)(p->priority)*10.0) / prioritySum);
       if(shares < 1.0) shares = 1.0;
       // if(ticks%100 < 2) {
       //   cprintf("pid: %d, shares %d/%d, prioritysum %d \n", p->pid, p->runcount, shares, prioritySum);
@@ -399,7 +400,6 @@ scheduler(void)
       }else{
         p->runcount ++;
       }
-
       c->proc = p;
 
       switchuvm(p);
@@ -609,7 +609,7 @@ print_current_rproc()
   cprintf("name \t pid \t state \t priority \t expected execution time \t started \t runcount\n");
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     p->expExecutionTime = p->state == RUNNING || p->state == RUNNABLE 
-      ? (((float)p->priority)/((float)prioritySum))*10 
+      ? (((float)p->priority)/((float)prioritySum))*10.0
       : 0;
 
     if(strncmp( p->name, "ps", 2 ) == 0) {
@@ -618,15 +618,16 @@ print_current_rproc()
 
     int seconds = (ticks - p->startTime)*10;
     int runtotal = p->runcount_t;
+    int exp = (int)(p->expExecutionTime*1000);
 
     if(p->state == SLEEPING){
-      cprintf("%s \t %d \t SLEEPING \t %d \t %ds \t\t\t\t %d ms ago \t %d\n ", p->name, p->pid, p->priority, p->expExecutionTime, seconds, runtotal);
+      cprintf("%s \t %d \t SLEEPING \t %d \t %dms \t\t\t\t %d ms ago \t %d\n ", p->name, p->pid, p->priority, exp, seconds, runtotal);
     }
     else if(p->state == RUNNING){
-      cprintf("%s \t %d \t RUNNING \t %d \t %ds \t\t\t\t %d ms ago \t %d \n ", p->name, p->pid, p->priority, p->expExecutionTime, seconds, runtotal);
+      cprintf("%s \t %d \t RUNNING \t %d \t %dms \t\t\t\t %d ms ago \t %d \n ", p->name, p->pid, p->priority, exp, seconds, runtotal);
     }
     else if(p->state == RUNNABLE){
-      cprintf("%s \t %d \t RUNNABLE \t %d \t %ds \t\t\t\t %d ms ago \t %d \n ", p->name, p->pid, p->priority, p->expExecutionTime, seconds, runtotal);
+      cprintf("%s \t %d \t RUNNABLE \t %d \t %dms \t\t\t\t %d ms ago \t %d \n ", p->name, p->pid, p->priority, exp, seconds, runtotal);
     }
   }
   release(&ptable.lock);

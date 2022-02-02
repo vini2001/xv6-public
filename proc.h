@@ -43,7 +43,7 @@ struct proc {
   int pid;                     // Process ID
   int priority;
   int executionTime;
-  int expExecutionTime;
+  float expExecutionTime;
   uint startTime;
   int runcount;
   int runcount_t;
