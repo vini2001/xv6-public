@@ -116,19 +116,17 @@ sys_date(void)
 }
 
 int
-sys_print_current_rproc(void)
+sys_ps(void)
 {
-  return print_current_rproc();
+  return ps();
 }
 
 int
-sys_change_priority(void)
+sys_setprio(void)
 {
   int pid, pr;
-  if(argint(0, &pid) < 0)
-    return -1;
-  if(argint(1, &pr) < 0)
-    return -1;
+  if(argint(0, &pid) < 0) return -1;
+  if(argint(1, &pr) < 0) return -1;
 
-  return change_priority(pid, pr);
+  return setprio(pid, pr);
 }

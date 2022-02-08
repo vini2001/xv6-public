@@ -22,5 +22,5 @@
 #define SYS_close           21
 #define SYS_date            22
 #define SYS_wait_t          23
-#define SYS_print_current_rproc         24
-#define SYS_change_priority             25
+#define SYS_ps              24
+#define SYS_setprio         25

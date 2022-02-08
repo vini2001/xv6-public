@@ -105,8 +105,8 @@ extern int sys_write(void);
 extern int sys_uptime(void);
 extern int sys_date(void);
 extern int sys_wait_t(void);
-extern int sys_print_current_rproc(void);
-extern int sys_change_priority(void);
+extern int sys_ps(void);
+extern int sys_setprio(void);
 
 static int (*syscalls[])(void) = {
 [SYS_fork]          sys_fork,
@@ -132,8 +132,8 @@ static int (*syscalls[])(void) = {
 [SYS_close]         sys_close,
 [SYS_date]          sys_date,
 [SYS_wait_t]        sys_wait_t,
-[SYS_print_current_rproc]           sys_print_current_rproc,
-[SYS_change_priority]          sys_change_priority,
+[SYS_ps]            sys_ps,
+[SYS_setprio]       sys_setprio,
 };
 
 void

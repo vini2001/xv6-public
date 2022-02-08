@@ -109,7 +109,8 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
-  p->priority = 1;  //Default Priority of a process is set to be 1
+  // Default priority
+  p->priority = 1;
 
   p->startTime = ticks;
   p->runcount_t = 0;
@@ -560,6 +561,15 @@ kill(int pid)
   return -1;
 }
 
+static char *states[] = {
+  [UNUSED]    "unused",
+  [EMBRYO]    "embryo",
+  [SLEEPING]  "sleep ",
+  [RUNNABLE]  "runnable",
+  [RUNNING]   "running",
+  [ZOMBIE]    "zombie"
+};
+
 //PAGEBREAK: 36
 // Print a process listing to console.  For debugging.
 // Runs when user types ^P on console.
@@ -567,14 +577,6 @@ kill(int pid)
 void
 procdump(void)
 {
-  static char *states[] = {
-  [UNUSED]    "unused",
-  [EMBRYO]    "embryo",
-  [SLEEPING]  "sleep ",
-  [RUNNABLE]  "runble",
-  [RUNNING]   "run   ",
-  [ZOMBIE]    "zombie"
-  };
   int i;
   struct proc *p;
   char *state;
@@ -599,14 +601,14 @@ procdump(void)
 
 
 int 
-print_current_rproc() 
+ps() 
 {
   struct proc *p;
   sti(); // habilita interrupções nesse  proc
   acquire(&ptable.lock);
   // pegando soma das prioridades:
   int prioritySum = getPrioritySum();
-  cprintf("name \t pid \t state \t priority \t expected execution time \t started \t runcount\n");
+  cprintf("name \t pid \t state \t priority \t expected execution time/10s \t started \t runcyles\n");
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     p->expExecutionTime = p->state == RUNNING || p->state == RUNNABLE 
       ? (((float)p->priority)/((float)prioritySum))*10.0
@@ -620,22 +622,16 @@ print_current_rproc()
     int runtotal = p->runcount_t;
     int exp = (int)(p->expExecutionTime*1000);
 
-    if(p->state == SLEEPING){
-      cprintf("%s \t %d \t SLEEPING \t %d \t %dms \t\t\t\t %d ms ago \t %d\n ", p->name, p->pid, p->priority, exp, seconds, runtotal);
-    }
-    else if(p->state == RUNNING){
-      cprintf("%s \t %d \t RUNNING \t %d \t %dms \t\t\t\t %d ms ago \t %d \n ", p->name, p->pid, p->priority, exp, seconds, runtotal);
-    }
-    else if(p->state == RUNNABLE){
-      cprintf("%s \t %d \t RUNNABLE \t %d \t %dms \t\t\t\t %d ms ago \t %d \n ", p->name, p->pid, p->priority, exp, seconds, runtotal);
-    }
+    char *state = states[p->state];
+    if(p->state != UNUSED)
+      cprintf("%s \t %d \t %s \t %d \t %dms \t\t\t\t %d ms ago \t %d\n ", p->name, p->pid, state, p->priority, exp, seconds, runtotal);
   }
   release(&ptable.lock);
   return 26;
 }
 
 int 
-change_priority(int pid, int priority)
+setprio(int pid, int priority)
 {
   struct proc *p;
   acquire(&ptable.lock);
